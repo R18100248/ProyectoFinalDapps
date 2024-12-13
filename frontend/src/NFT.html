@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de NFTs - DApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4caf50;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="number"],
+        .form-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .form-container input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .form-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            background-color: #e7f7e7;
+            padding: 10px;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Gestión de NFTs para Juguetes</h1>
+        <!-- Obtener Colección de un Usuario -->
+        <div class="form-container" id="getUserCollectionForm">
+            <h2>Obtener Colección del Usuario</h2>
+            <label for="userAddress">Dirección del Usuario:</label>
+            <input type="text" id="userAddress" placeholder="Introduce la dirección del usuario">
+            <input type="submit" value="Obtener Colección" onclick="getUserCollection()">
+            <div id="userCollectionResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function mintNFT() {
+            const recipient = document.getElementById("recipient").value;
+            const tokenURI = document.getElementById("tokenURI").value;
+
+            if (!recipient || !tokenURI) {
+                alert("Por favor, ingresa todos los campos.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/crear/mint", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ recipient: recipient, tokenURI: tokenURI }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("mintResult").textContent = `NFT acuñado exitosamente. TxHash: ${data.txHash}`;
+                } else {
+                    document.getElementById("mintResult").textContent = "Hubo un problema al acuñar el NFT.";
+                }
+            } catch (error) {
+                console.error("Error al acuñar el NFT:", error);
+                document.getElementById("mintResult").textContent = "Error al acuñar el NFT.";
+            }
+        }
+
+        async function getTokenURI() {
+            const tokenId = document.getElementById("tokenId").value;
+            if (!tokenId || isNaN(tokenId)) {
+                alert("Por favor, ingresa un ID de token válido.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/crear/token-uri/${tokenId}`);
+                const data = await response.json();
+                if (data.tokenURI) {
+                    document.getElementById("tokenURIResult").textContent = `Token URI: ${data.tokenURI}`;
+                } else {
+                    document.getElementById("tokenURIResult").textContent = "No se pudo obtener el URI del token.";
+                }
+            } catch (error) {
+                console.error("Error al obtener el URI del token:", error);
+                document.getElementById("tokenURIResult").textContent = "Error al obtener el URI del token.";
+            }
+        }
+
+        async function getUserCollection() {
+            const userAddress = document.getElementById("userAddress").value;
+            if (!userAddress) {
+                alert("Por favor, ingresa una dirección de usuario.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/crear/collection?userAddress=${userAddress}`);
+                const data = await response.json();
+                if (data.nfts) {
+                    document.getElementById("userCollectionResult").textContent = `NFTs del usuario: ${JSON.stringify(data.nfts)}`;
+                } else {
+                    document.getElementById("userCollectionResult").textContent = "No se pudo obtener la colección del usuario.";
+                }
+            } catch (error) {
+                console.error("Error al obtener la colección del usuario:", error);
+                document.getElementById("userCollectionResult").textContent = "Error al obtener la colección del usuario.";
+            }
+        }
+    </script>
+</body>
+
+</html>

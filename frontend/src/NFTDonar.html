@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donación de NFTs - DApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4caf50;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="number"],
+        .form-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .form-container input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .form-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            background-color: #e7f7e7;
+            padding: 10px;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Donaciones de NFTs para Juguetes</h1>
+
+        <!-- Crear Donación -->
+        <div class="form-container" id="createDonationForm">
+            <h2>Crear una Donación</h2>
+            <label for="donationTokenId">ID del Token de la Donación:</label>
+            <input type="text" id="donationTokenId" placeholder="Introduce el ID del token">
+            <label for="donationTokenURI">Token URI de la Donación:</label>
+            <input type="text" id="donationTokenURI" placeholder="Introduce la URL del token">
+            <input type="submit" value="Crear Donación" onclick="createDonation()">
+            <div id="createDonationResult" class="result"></div>
+        </div>
+
+        <!-- Reclamar Donación -->
+        <div class="form-container" id="claimDonationForm">
+            <h2>Reclamar una Donación</h2>
+            <label for="claimTokenId">ID del Token de la Donación:</label>
+            <input type="text" id="claimTokenId" placeholder="Introduce el ID del token">
+            <input type="submit" value="Reclamar Donación" onclick="claimDonation()">
+            <div id="claimDonationResult" class="result"></div>
+        </div>
+
+        <!-- Obtener Detalles de la Donación -->
+        <div class="form-container" id="getDonationDetailsForm">
+            <h2>Detalles de la Donación</h2>
+            <label for="donationDetailsTokenId">ID del Token de la Donación:</label>
+            <input type="text" id="donationDetailsTokenId" placeholder="Introduce el ID del token">
+            <input type="submit" value="Obtener Detalles" onclick="getDonationDetails()">
+            <div id="donationDetailsResult" class="result"></div>
+        </div>
+
+        <!-- Agregar Beneficiario -->
+        <div class="form-container" id="addBeneficiaryForm">
+            <h2>Agregar Beneficiario</h2>
+            <label for="beneficiaryAddress">Dirección del Beneficiario:</label>
+            <input type="text" id="beneficiaryAddress" placeholder="Introduce la dirección del beneficiario">
+            <input type="submit" value="Agregar Beneficiario" onclick="addBeneficiary()">
+            <div id="addBeneficiaryResult" class="result"></div>
+        </div>
+
+        <!-- Actualizar Estado del Beneficiario -->
+        <div class="form-container" id="updateBeneficiaryStatusForm">
+            <h2>Actualizar Estado del Beneficiario</h2>
+            <label for="updateBeneficiaryAddress">Dirección del Beneficiario:</label>
+            <input type="text" id="updateBeneficiaryAddress" placeholder="Introduce la dirección del beneficiario">
+            <label for="hasClaimed">¿Ha reclamado el beneficiario?</label>
+            <select id="hasClaimed">
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+            </select>
+            <input type="submit" value="Actualizar Estado" onclick="updateBeneficiaryStatus()">
+            <div id="updateBeneficiaryStatusResult" class="result"></div>
+        </div>
+
+        <!-- Ver Donaciones Activas -->
+        <div class="form-container" id="getActiveDonationsForm">
+            <h2>Ver Donaciones Activas</h2>
+            <input type="submit" value="Obtener Donaciones Activas" onclick="getActiveDonations()">
+            <div id="activeDonationsResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Funciones para interactuar con el backend
+        async function createDonation() {
+            const tokenId = document.getElementById("donationTokenId").value;
+            const tokenURI = document.getElementById("donationTokenURI").value;
+
+            if (!tokenId || !tokenURI) {
+                alert("Por favor, ingresa todos los campos.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/donar/create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ tokenId: tokenId, tokenURI: tokenURI }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("createDonationResult").textContent = `Donación creada exitosamente. TxHash: ${data.txHash}`;
+                } else {
+                    document.getElementById("createDonationResult").textContent = "Hubo un problema al crear la donación.";
+                }
+            } catch (error) {
+                console.error("Error al crear la donación:", error);
+                document.getElementById("createDonationResult").textContent = "Error al crear la donación.";
+            }
+        }
+
+        async function claimDonation() {
+            const tokenId = document.getElementById("claimTokenId").value;
+            if (!tokenId || isNaN(tokenId)) {
+                alert("Por favor, ingresa un ID de token válido.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/donar/claim", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ tokenId: tokenId }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("claimDonationResult").textContent = `Donación reclamada exitosamente. TxHash: ${data.txHash}`;
+                } else {
+                    document.getElementById("claimDonationResult").textContent = "Hubo un problema al reclamar la donación.";
+                }
+            } catch (error) {
+                console.error("Error al reclamar la donación:", error);
+                document.getElementById("claimDonationResult").textContent = "Error al reclamar la donación.";
+            }
+        }
+
+        async function getDonationDetails() {
+            const tokenId = document.getElementById("donationDetailsTokenId").value;
+            if (!tokenId || isNaN(tokenId)) {
+                alert("Por favor, ingresa un ID de token válido.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/donar/details/${tokenId}`);
+                const data = await response.json();
+                if (data.details) {
+                    document.getElementById("donationDetailsResult").textContent = `Detalles de la Donación: ${JSON.stringify(data.details)}`;
+                } else {
+                    document.getElementById("donationDetailsResult").textContent = "No se pudo obtener los detalles de la donación.";
+                }
+            } catch (error) {
+                console.error("Error al obtener los detalles de la donación:", error);
+                document.getElementById("donationDetailsResult").textContent = "Error al obtener los detalles de la donación.";
+            }
+        }
+
+        async function addBeneficiary() {
+            const beneficiaryAddress = document.getElementById("beneficiaryAddress").value;
+            if (!beneficiaryAddress) {
+                alert("Por favor, ingresa una dirección de beneficiario.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/donar/add-beneficiary", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ beneficiaryAddress: beneficiaryAddress }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("addBeneficiaryResult").textContent = `Beneficiario agregado exitosamente. TxHash: ${data.txHash}`;
+                } else {
+                    document.getElementById("addBeneficiaryResult").textContent = "Hubo un problema al agregar el beneficiario.";
+                }
+            } catch (error) {
+                console.error("Error al agregar el beneficiario:", error);
+                document.getElementById("addBeneficiaryResult").textContent = "Error al agregar el beneficiario.";
+            }
+        }
+
+        async function updateBeneficiaryStatus() {
+            const beneficiaryAddress = document.getElementById("updateBeneficiaryAddress").value;
+            const hasClaimed = document.getElementById("hasClaimed").value;
+
+            if (!beneficiaryAddress) {
+                alert("Por favor, ingresa una dirección de beneficiario.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/donar/update-beneficiary-status", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        beneficiaryAddress: beneficiaryAddress,
+                        hasClaimed: hasClaimed,
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById("updateBeneficiaryStatusResult").textContent = `Estado del beneficiario actualizado exitosamente. TxHash: ${data.txHash}`;
+                } else {
+                    document.getElementById("updateBeneficiaryStatusResult").textContent = "Hubo un problema al actualizar el estado del beneficiario.";
+                }
+            } catch (error) {
+                console.error("Error al actualizar el estado del beneficiario:", error);
+                document.getElementById("updateBeneficiaryStatusResult").textContent = "Error al actualizar el estado del beneficiario.";
+            }
+        }
+
+        async function getActiveDonations() {
+            try {
+                const response = await fetch("http://localhost:3000/donar/active-donations");
+                const data = await response.json();
+                if (data.activeDonations) {
+                    document.getElementById("activeDonationsResult").textContent = `Donaciones Activas: ${JSON.stringify(data.activeDonations)}`;
+                } else {
+                    document.getElementById("activeDonationsResult").textContent = "No se pudo obtener las donaciones activas.";
+                }
+            } catch (error) {
+                console.error("Error al obtener las donaciones activas:", error);
+                document.getElementById("activeDonationsResult").textContent = "Error al obtener las donaciones activas.";
+            }
+        }
+    </script>
+</body>
+
+</html>
